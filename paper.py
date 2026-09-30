@@ -2,13 +2,18 @@
 import json
 from datetime import datetime, timezone
 import db
-from config import (BAR_MS, SYMBOLS, START_EQUITY, FEE, SLIPPAGE, RISK_PER_TRADE, MIN_NOTIONAL,
+from config import (USDT_VND, BAR_MS, SYMBOLS, START_EQUITY, FEE, SLIPPAGE, RISK_PER_TRADE, MIN_NOTIONAL,
                     ATR_SL, ATR_TP, CRITERIA)
 from strategy import decide
 
 
 def fmt(ms):
     return datetime.fromtimestamp(ms / 1000, timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+def money(usdt, sign=False):
+    """Hiển thị USDT kèm quy đổi VND (tỉ giá ước tính USDT_VND)."""
+    s = "+" if sign else ""
+    return f"{usdt:{s},.2f} USDT (~{usdt * USDT_VND:{s},.0f}₫)"
 
 def equity(con):
     cash = db.get(con, "cash")
@@ -23,7 +28,7 @@ def _close(con, sym, pos, ts, px, reason, notify):
     con.execute("INSERT INTO trades (symbol,entry_ms,exit_ms,entry,exit,qty,sl,tp,pnl,exit_reason)"
                 " VALUES (?,?,?,?,?,?,?,?,?,?)", (sym, entry_ms, ts, entry, px, qty, sl, tp, pnl, reason))
     con.execute("DELETE FROM positions WHERE symbol=?", (sym,))
-    notify(f"🔴 ĐÓNG {sym} ({reason}) @ {px:,.2f} | PnL {pnl:+.2f} USDT | {fmt(ts)}")
+    notify(f"🔴 ĐÓNG {sym} ({reason}) @ {px:,.2f} | PnL {money(pnl, True)} | {fmt(ts)}")
 
 def _open(con, sym, row, ts, notify):
     atr = float(row["atr"])
@@ -41,7 +46,7 @@ def _open(con, sym, row, ts, notify):
     db.put(con, "cash", cash - qty * entry * (1 + FEE))
     con.execute("INSERT INTO positions VALUES (?,?,?,?,?,?)", (sym, qty, entry, sl, tp, ts))
     notify(f"🟢 MUA {sym} @ {entry:,.2f} | SL {sl:,.2f} | TP {tp:,.2f} | "
-           f"qty {qty:.6f} | {fmt(ts)}")
+           f"qty {qty:.6f} (~{qty * entry * USDT_VND:,.0f}₫) | {fmt(ts)}")
     return None
 
 def process(con, sym, row, news, notify):
@@ -77,7 +82,7 @@ def step(con, now_ms, frames, news, notify):
             db.put(con, f"start_price:{sym}", float(df["close"].iloc[-1]))
             db.put(con, f"last_close:{sym}", float(df["close"].iloc[-1]))
         con.execute("INSERT INTO equity VALUES (?,?)", (now_ms, START_EQUITY))
-        notify(f"▶️ SignalBot bắt đầu paper trading {', '.join(frames)} | vốn ảo {START_EQUITY} USDT")
+        notify(f"▶️ SignalBot bắt đầu paper trading {', '.join(frames)} | vốn ảo {money(START_EQUITY)}")
         return
     events = []
     for sym, df in frames.items():

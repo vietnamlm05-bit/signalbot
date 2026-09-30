@@ -8,7 +8,9 @@ _UNIT_MS = {"m": 60_000, "h": 3_600_000, "d": 86_400_000}
 BAR_MS = int(TIMEFRAME[:-1]) * _UNIT_MS[TIMEFRAME[-1]]   # độ dài 1 nến (ms)
 DB_PATH = os.getenv("DB_PATH", "paper.db")
 
-START_EQUITY = 1000.0      # vốn ảo (USDT)
+USDT_VND = float(os.getenv("USDT_VND", "26000"))   # tỉ giá ước tính, chỉ để HIỂN THỊ (sửa cho sát thực tế)
+START_VND = 2_000_000                              # vốn thật dự định (VND)
+START_EQUITY = round(START_VND / USDT_VND, 2)      # vốn ảo tính bằng USDT (~77 USDT)
 FEE = 0.001                # phí 0.1% mỗi chiều
 SLIPPAGE = 0.0005          # trượt giá 0.05%
 RISK_PER_TRADE = 0.01      # rủi ro tối đa 1% vốn mỗi lệnh

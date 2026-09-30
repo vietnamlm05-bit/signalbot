@@ -3,7 +3,7 @@ import time
 import db
 import notify
 from config import BAR_MS, TIMEFRAME, SYMBOLS, START_EQUITY, CRITERIA
-from paper import fmt
+from paper import fmt, money
 
 PERIODS = {"1d": 1, "3d": 3, "7d": 7, "1w": 7, "2w": 14, "1m": 30, "3m": 90, "6m": 180}
 DAY_MS = 86_400_000
@@ -57,9 +57,9 @@ def build(con, now_ms=None, period=None):
             f"📊 Báo cáo {period} {note}".strip(),
             f"Từ {fmt(since)} đến {fmt(now_ms)} ({hours:.1f} giờ)",
             "",
-            f"- Vốn ảo: {base:.2f} → {eq[-1]:.2f} USDT ({ret:+.2f}%)",
+            f"- Vốn ảo: {money(base)} → {money(eq[-1])} ({ret:+.2f}%)",
             f"- Mua-và-giữ cùng kỳ: {bh:+.2f}%",
-            f"- Lệnh đã đóng: {n} | thắng: {wins} ({(wins / n if n else 0):.0%}) | PnL: {pnl:+.2f} USDT",
+            f"- Lệnh đã đóng: {n} | thắng: {wins} ({(wins / n if n else 0):.0%}) | PnL: {money(pnl, True)}",
             f"- Đang mở: {len(opened)} | Max drawdown: {mdd:.2f}%",
             f"- Uptime: {uptime:.1%} | lần chạy lỗi: {failed}",
         ]
@@ -77,7 +77,7 @@ def build(con, now_ms=None, period=None):
         "# Báo cáo SignalBot (paper trading)",
         f"Từ {fmt(start)} đến {fmt(now_ms)} ({hours:.1f} giờ, {bars} nến {TIMEFRAME})",
         "",
-        f"- Vốn ảo: {START_EQUITY:.2f} → {eq[-1]:.2f} USDT ({ret:+.2f}%)",
+        f"- Vốn ảo: {money(START_EQUITY)} → {money(eq[-1])} ({ret:+.2f}%)",
         f"- Mua-và-giữ cùng kỳ: {bh:+.2f}%",
         f"- Lệnh đã đóng: {n} | thắng: {wins} ({(wins / n if n else 0):.0%}) | đang mở: {len(opened)}",
         f"- Lần chạy lỗi: {failed}",
