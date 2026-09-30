@@ -2,11 +2,10 @@
 import json
 from datetime import datetime, timezone
 import db
-from config import (SYMBOLS, START_EQUITY, FEE, SLIPPAGE, RISK_PER_TRADE, MIN_NOTIONAL,
+from config import (BAR_MS, SYMBOLS, START_EQUITY, FEE, SLIPPAGE, RISK_PER_TRADE, MIN_NOTIONAL,
                     ATR_SL, ATR_TP, CRITERIA)
 from strategy import decide
 
-HOUR_MS = 3_600_000
 
 def fmt(ms):
     return datetime.fromtimestamp(ms / 1000, timezone.utc).strftime("%Y-%m-%d %H:%M UTC")

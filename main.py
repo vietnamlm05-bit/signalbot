@@ -1,9 +1,9 @@
-"""Chạy 1 lần (GitHub Actions gọi mỗi giờ)."""
+"""Chạy 1 lần (GitHub Actions gọi mỗi 5 phút)."""
 import time
 import db
 import notify
 import paper
-from config import SYMBOLS
+from config import BAR_MS, SYMBOLS
 from indicators import add_indicators
 
 def run(now_ms=None, fetch=None, news_fn=None, con=None, send=None):
@@ -18,7 +18,7 @@ def run(now_ms=None, fetch=None, news_fn=None, con=None, send=None):
         frames = {}
         for sym in SYMBOLS:
             df = fetch(sym)
-            df = df[df["ts"] + paper.HOUR_MS <= now_ms]        # bỏ nến chưa đóng
+            df = df[df["ts"] + BAR_MS <= now_ms]        # bỏ nến chưa đóng
             if len(df) < 60:
                 raise RuntimeError(f"{sym}: thiếu dữ liệu ({len(df)} nến)")
             frames[sym] = add_indicators(df)

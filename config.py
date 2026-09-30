@@ -3,7 +3,9 @@ import os
 
 EXCHANGE = os.getenv("EXCHANGE", "kraken")   # sàn lấy giá (chỉ đọc dữ liệu công khai)
 SYMBOLS = ["BTC/USDT", "ETH/USDT"]
-TIMEFRAME = "1h"                             # giữ 1h (code tính theo giờ)
+TIMEFRAME = "5m"                             # khung nến: 1m, 5m, 15m, 1h... (chạy Actions: tối thiểu 5m)
+_UNIT_MS = {"m": 60_000, "h": 3_600_000, "d": 86_400_000}
+BAR_MS = int(TIMEFRAME[:-1]) * _UNIT_MS[TIMEFRAME[-1]]   # độ dài 1 nến (ms)
 DB_PATH = os.getenv("DB_PATH", "paper.db")
 
 START_EQUITY = 1000.0      # vốn ảo (USDT)
@@ -25,7 +27,7 @@ COIN_WORDS = {"BTC": ["bitcoin", "btc"], "ETH": ["ethereum", "eth", "ether"]}
 
 # Tiêu chí đánh giá: ĐẶT TRƯỚC, bị "đóng băng" vào DB ở lần chạy đầu.
 CRITERIA = {
-    "min_uptime": 0.95,        # >= 95% số giờ có lần chạy thành công
+    "min_uptime": 0.95,        # >= 95% số nến có lần chạy thành công
     "sl_coverage": 1.0,        # 100% lệnh có stop-loss hợp lệ
     "max_underperf_pct": 2.0,  # không kém mua-và-giữ quá 2 điểm %
     "max_drawdown_pct": 10.0,  # sụt giảm tối đa <= 10%

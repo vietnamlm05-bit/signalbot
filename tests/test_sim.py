@@ -6,18 +6,18 @@ import numpy as np
 import pandas as pd
 import db, main, report
 from config import SYMBOLS, START_EQUITY, FEE
-from paper import HOUR_MS
+from config import BAR_MS
 
 rng = np.random.default_rng(42)
-T0 = 1_780_000_000_000 // HOUR_MS * HOUR_MS
-N = 450
+T0 = 1_780_000_000_000 // BAR_MS * BAR_MS
+N = 2400
 
 def make_candles(price):
     rets = rng.normal(0, 0.008, N) + np.repeat(rng.normal(0, 0.002, N // 50 + 1), 50)[:N]
     close = price * np.exp(np.cumsum(rets))
     open_ = np.r_[price, close[:-1]]
     spread = np.abs(rng.normal(0, 0.004, N)) * close
-    return pd.DataFrame({"ts": T0 + np.arange(N) * HOUR_MS, "open": open_,
+    return pd.DataFrame({"ts": T0 + np.arange(N) * BAR_MS, "open": open_,
                          "high": np.maximum(open_, close) + spread,
                          "low": np.minimum(open_, close) - spread,
                          "close": close, "volume": 1.0})
@@ -36,12 +36,12 @@ msgs = []
 if os.path.exists("sim.db"):
     os.remove("sim.db")
 con = db.connect("sim.db")
-start = T0 + 250 * HOUR_MS + 7 * 60_000
-skip_hours = {40, 41, 42}        # giả lập GitHub Actions bỏ lỡ 3 lần chạy
-fail_hour = 100                  # giả lập 1 lần lỗi mạng
+start = T0 + 250 * BAR_MS + 2 * 60_000
+skip_hours = {480, 481, 482}     # giả lập GitHub Actions bỏ lỡ 3 lần chạy
+fail_hour = 1200                 # giả lập 1 lần lỗi mạng
 
-for h in range(0, 169):
-    clock["now"] = start + h * HOUR_MS
+for h in range(0, 7 * 24 * 12 + 1):
+    clock["now"] = start + h * BAR_MS
     if h in skip_hours:
         continue
     if h == fail_hour:
@@ -57,8 +57,8 @@ for h in range(0, 169):
 start_ms = db.get(con, "start_ms")
 for sym in SYMBOLS:
     df = DATA[sym]
-    expected = df[(df["ts"] > df[df["ts"] + HOUR_MS <= start]["ts"].max()) &
-                  (df["ts"] + HOUR_MS <= clock["now"])]
+    expected = df[(df["ts"] > df[df["ts"] + BAR_MS <= start]["ts"].max()) &
+                  (df["ts"] + BAR_MS <= clock["now"])]
     got = con.execute("SELECT ts FROM signals WHERE symbol=? ORDER BY ts", (sym,)).fetchall()
     assert [g[0] for g in got] == list(expected["ts"]), f"{sym}: nến bị lặp hoặc bị bỏ"
 

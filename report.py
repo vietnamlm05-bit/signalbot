@@ -2,8 +2,8 @@
 import time
 import db
 import notify
-from config import SYMBOLS, START_EQUITY, CRITERIA
-from paper import HOUR_MS, fmt
+from config import BAR_MS, TIMEFRAME, SYMBOLS, START_EQUITY, CRITERIA
+from paper import fmt
 
 def build(con, now_ms=None):
     now_ms = now_ms or int(time.time() * 1000)
@@ -11,10 +11,11 @@ def build(con, now_ms=None):
     if start is None:
         return "Chưa có dữ liệu: bot chưa chạy lần nào."
     crit = db.get(con, "criteria")
-    hours = max(int((now_ms - start) // HOUR_MS), 1)
-    ok_hours = {ts // HOUR_MS for (ts,) in con.execute(
+    bars = max(int((now_ms - start) // BAR_MS), 1)
+    hours = (now_ms - start) / 3_600_000
+    ok_bars = {ts // BAR_MS for (ts,) in con.execute(
         "SELECT ts FROM runs WHERE ok=1 AND ts>?", (start,))}
-    uptime = min(len(ok_hours) / hours, 1.0)
+    uptime = min(len(ok_bars) / bars, 1.0)
     failed = con.execute("SELECT COUNT(*) FROM runs WHERE ok=0").fetchone()[0]
 
     trades = con.execute("SELECT pnl, sl, entry FROM trades").fetchall()
@@ -43,7 +44,7 @@ def build(con, now_ms=None):
     ]
     lines = [
         "# Báo cáo SignalBot (paper trading)",
-        f"Từ {fmt(start)} đến {fmt(now_ms)} ({hours} giờ)",
+        f"Từ {fmt(start)} đến {fmt(now_ms)} ({hours:.1f} giờ, {bars} nến {TIMEFRAME})",
         "",
         f"- Vốn ảo: {START_EQUITY:.2f} → {eq[-1]:.2f} USDT ({ret:+.2f}%)",
         f"- Mua-và-giữ cùng kỳ: {bh:+.2f}%",
