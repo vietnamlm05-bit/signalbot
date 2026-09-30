@@ -72,6 +72,10 @@ bad = con.execute("SELECT COUNT(*) FROM trades WHERE sl IS NULL OR sl<=0 OR sl>=
 assert bad == 0, "có lệnh thiếu stop-loss"
 assert con.execute("SELECT COUNT(*) FROM runs WHERE ok=0").fetchone()[0] == 1
 
+for per in ("1d", "3d", "1w", "2w", "1m", "6m"):
+    txt = report.build(con, clock["now"], period=per)
+    assert "Vốn ảo" in txt, per
+print(report.build(con, clock["now"], period="3d"), "\n")
 print(report.build(con, clock["now"]))
 print("\nTin nhắn Telegram (5 cái đầu):")
 for m in msgs[:5]:

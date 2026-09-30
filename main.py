@@ -34,4 +34,8 @@ def run(now_ms=None, fetch=None, news_fn=None, con=None, send=None):
         raise
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    finally:                       # lệnh /report vẫn được trả lời dù lần chạy này lỗi
+        import commands
+        commands.handle(db.connect())
