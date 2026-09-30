@@ -12,6 +12,13 @@ KEYBOARD = {"inline_keyboard": [
 ]}
 
 def _run(con, arg):
+    try:
+        _run_inner(con, arg)
+    except Exception as ex:
+        print(f"::error::Lỗi xử lý /report: {ex!r}")
+        notify.send(f"⚠️ Không tạo được báo cáo: {ex!r}")
+
+def _run_inner(con, arg):
     if arg == "all":
         notify.send(report.build(con).replace("**", ""))
     elif arg in report.PERIODS:
